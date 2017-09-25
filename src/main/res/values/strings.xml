@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ZPushTest</string>
+    <string name="push_alias">ALIAS : </string>
+    <string name="push_topic">TOPICS : </string>
+    <string name="push_heartbeat">HEARTBEAT : </string>
+    <string name="action_settings">Settings</string>
+</resources>
