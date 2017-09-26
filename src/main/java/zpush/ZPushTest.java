@@ -17,8 +17,8 @@ import java.util.regex.Pattern;
 
 public class ZPushTest {
     private static Scanner sScanner = new Scanner(System.in);
-    private static final String SERVER = "119.23.149.16";
-    private static final int PORT = 9800;
+    private static final String SERVER = "10.0.0.135";
+    private static final int PORT = 23233;
     private static BufferedReader reader;
     private static BufferedWriter writer;
     private static String alias;
