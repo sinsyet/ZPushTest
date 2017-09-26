@@ -78,6 +78,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="SEND"
+        android:onClick="clickSend"
         />
 
     <TextView
@@ -99,8 +100,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <EditText
+    <TextView
         android:layout_margin="5dp"
+        android:id="@+id/main_tv_rpush"
         android:background="@drawable/et_bg"
         android:layout_width="match_parent"
         android:layout_height="100dp" />

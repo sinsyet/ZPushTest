@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -78,6 +79,10 @@ public class MainActivity extends AppCompatActivity {
             "\"num\":%d" + "}";
     private MaterialDialog mInputsDialog;
 
+    private String action;
+    private List<Object> params = new ArrayList<>();
+    private TextView mTvPush;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
                         Function heartBeat = functions.get("HeartBeat");
                         String requestJson = String.format(heartBeat.requestJson, SP.get(Key.ALIAS, ""));
                         mTvRequest.setText(requestJson);
-
+                        action = "HeartBeat";
                     }
                 }));
 
@@ -131,16 +136,20 @@ public class MainActivity extends AppCompatActivity {
                                 String[] split = trim.split(",");
                                 StringBuilder sBuf = new StringBuilder();
                                 int index = 0;
+                                String[] topics = new String[split.length];
                                 for (String str : split) {
                                     if (index > 0) {
                                         sBuf.append(",");
                                     }
                                     sBuf.append("\"").append(str).append("\"");
+                                    topics[index] = str;
                                     index++;
                                 }
                                 String requestJson = String.format(heartBeat.requestJson, sBuf.toString(), System.currentTimeMillis());
                                 mTvRequest.setText(requestJson);
-
+                                action = "Register";
+                                params.clear();
+                                params.add(topics);
                             }
                         });
                     }
@@ -154,6 +163,8 @@ public class MainActivity extends AppCompatActivity {
                         Function get_topic = functions.get("Get_Topic");
                         String get_topic_requestJson = String.format(get_topic.requestJson, System.currentTimeMillis());
                         mTvRequest.setText(get_topic_requestJson);
+                        action = "Get_Topic";
+                        params.clear();
                     }
                 }));
 
@@ -165,6 +176,8 @@ public class MainActivity extends AppCompatActivity {
                         Function get_topic = functions.get("Pull");
                         String get_topic_requestJson = String.format(get_topic.requestJson, System.currentTimeMillis());
                         mTvRequest.setText(get_topic_requestJson);
+                        action = "Pull";
+                        params.clear();
                     }
                 }));
 
@@ -190,6 +203,11 @@ public class MainActivity extends AppCompatActivity {
                                                         Integer.parseInt(msg[2]),
                                                         System.currentTimeMillis());
                                                 mTvRequest.setText(format);
+                                                action = "Push-To-Alias";
+                                                params.clear();
+                                                params.add(msg[0]);
+                                                params.add(msg[1]);
+                                                params.add(Integer.parseInt(msg[2]));
                                             }
                                         });
                             }
@@ -302,6 +320,7 @@ public class MainActivity extends AppCompatActivity {
         mLlContainer = (LinearLayout) findViewById(R.id.main_ll_funs);
         mTvRequest = (TextView) findViewById(R.id.main_tv_request);
         mTvResponse = (TextView) findViewById(R.id.main_tv_response);
+        mTvPush = (TextView) findViewById(R.id.main_tv_rpush);
         fillFunctions();
         for (String s : functions.keySet()) {
             Button heartbeat = createFunctionBtn(s);
@@ -429,6 +448,55 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    public void clickSend(View view) {
+        if (action == null) {
+            Toast.makeText(this, "请先选择功能", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        switch (action){
+            case "HeartBeat":
+
+                break;
+            case "Register":
+                String[] o = (String[]) params.get(0);
+                ZZWPush.subscribe(o, new IPushClient.PushObserver() {
+                    @Override
+                    public void onReback(@NonNull PushResult pushResult) {
+                        mTvResponse.setText("success: "+pushResult.success+", msg: "+pushResult.msg);
+                    }
+                },null);
+                break;
+            case "Get_Topic":
+                ZZWPush.getTopics(new IPushClient.PushObserver() {
+                    @Override
+                    public void onReback(@NonNull PushResult pushResult) {
+                        mTvResponse.setText("success: "+pushResult.success+", msg: "+pushResult.msg);
+                    }
+                });
+                break;
+            case "Pull":
+                ZZWPush.pullMsg(new IPushClient.PushObserver() {
+                    @Override
+                    public void onReback(@NonNull PushResult pushResult) {
+                        mTvResponse.setText("success: "+pushResult.success+", msg: "+pushResult.msg);
+                    }
+                });
+                break;
+            case "Push-To-Alias":
+                String alias  = (String) params.get(0);
+                String msg  = (String) params.get(1);
+                int livetime  = (int) params.get(2);
+                ZZWPush.pushMsg2Alias(new String[]{alias}, msg, livetime, new IPushClient.PushObserver() {
+                    @Override
+                    public void onReback(@NonNull PushResult pushResult) {
+                        mTvResponse.setText("success: "+pushResult.success+", msg: "+pushResult.msg);
+                    }
+                });
+                break;
+
+        }
+    }
+
     interface OnInputListener {
         void onInputFinish(String msg);
     }
@@ -447,7 +515,7 @@ public class MainActivity extends AppCompatActivity {
                 case ZZWPush.ACTION.PUSH_ARRIVE:
                     // in
                     String pushArrive = intent.getStringExtra(ZZWPush.KEY.PUSH_ARRIVE);
-                    mTvResponse.setText(pushArrive);
+                    mTvPush.setText("收到推送: "+pushArrive);
                     break;
             }
         }
